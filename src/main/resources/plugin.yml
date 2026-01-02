@@ -1,0 +1,4 @@
+name: invswapper
+version: '1.0-SNAPSHOT'
+main: moe.qwreey.invswapper.Invswapper
+api-version: '1.21'
