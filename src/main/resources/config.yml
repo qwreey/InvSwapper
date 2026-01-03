@@ -1,0 +1,19 @@
+slots:
+  survival:
+    default-gamemode: survival
+    worlds:
+      - world
+      - world_nether
+      - world_ender
+    allow-portals: true
+    default-world: world
+    save-position: true
+    save-gamemode: true
+  creative:
+    default-gamemode: creative
+    worlds:
+      - world_flatworld_flatworld
+    allow-portals: false
+    default-world: world_flatworld_flatworld
+    save-position: true
+    save-gamemode: true
