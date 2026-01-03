@@ -1,13 +1,19 @@
 package moe.qwreey.invswapper.utility
 
+import io.papermc.paper.registry.RegistryAccess
+import io.papermc.paper.registry.RegistryKey
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.NamespacedKey
+import org.bukkit.Registry
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataAdapterContext
 import org.bukkit.persistence.PersistentDataContainer
 import org.bukkit.persistence.PersistentDataType
-import java.util.Optional
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
+import java.util.*
+
 
 open class NullableListSerializer<P : Any, C : Any>(
     val elementSer: PersistentDataType<P, C>
@@ -149,6 +155,105 @@ class OptionalSerializer<P : Any, C : Any>(
                 elementSer
             )!!)
         }
+    }
+}
+
+object PotionEffectSerializer: PersistentDataType<PersistentDataContainer, PotionEffect> {
+    val potionRegistry: Registry<PotionEffectType> = RegistryAccess
+        .registryAccess()
+        .getRegistry<PotionEffectType>(RegistryKey.MOB_EFFECT)
+    override fun getPrimitiveType(): Class<PersistentDataContainer> {
+        return PersistentDataContainer::class.java
+    }
+    override fun getComplexType(): Class<PotionEffect> {
+        return PotionEffect::class.java
+    }
+    override fun toPrimitive(complex: PotionEffect, context: PersistentDataAdapterContext): PersistentDataContainer {
+        val container = context.newPersistentDataContainer()
+
+        container.set(
+            NamespacedKey("potion", "type"),
+            PersistentDataType.STRING,
+            complex.type.key.asString()
+        )
+        container.set(
+            NamespacedKey("potion", "duration"),
+            PersistentDataType.INTEGER,
+            complex.duration
+        )
+        container.set(
+            NamespacedKey("potion", "amplifier"),
+            PersistentDataType.INTEGER,
+            complex.amplifier
+        )
+        container.set(
+            NamespacedKey("potion", "ambient"),
+            PersistentDataType.BOOLEAN,
+            complex.isAmbient
+        )
+        container.set(
+            NamespacedKey("potion", "particles"),
+            PersistentDataType.BOOLEAN,
+            complex.hasParticles()
+        )
+        container.set(
+            NamespacedKey("potion", "icon"),
+            PersistentDataType.BOOLEAN,
+            complex.hasIcon()
+        )
+        complex.hiddenPotionEffect?.also {
+            container.set(
+                NamespacedKey("potion", "hidden-effect"),
+                PotionEffectSerializer,
+                complex.hiddenPotionEffect!!
+            )
+        }
+
+        return container
+    }
+    override fun fromPrimitive(
+        primitive: PersistentDataContainer,
+        context: PersistentDataAdapterContext
+    ): PotionEffect {
+        val potionType = potionRegistry.getOrThrow(
+            NamespacedKey.fromString(primitive.get(
+                NamespacedKey("potion", "type"),
+                PersistentDataType.STRING,
+            )!!)!!
+        )
+
+        val hiddenEffectKey = NamespacedKey("potion", "hidden-effect")
+        val hiddenEffect = if (primitive.has(hiddenEffectKey)) {
+            primitive.get(
+                hiddenEffectKey,
+                PotionEffectSerializer
+            )
+        } else null
+
+        return PotionEffect(
+            potionType,
+            primitive.get(
+                NamespacedKey("potion", "duration"),
+                PersistentDataType.INTEGER,
+            )!!,
+            primitive.get(
+                NamespacedKey("potion", "amplifier"),
+                PersistentDataType.INTEGER,
+            )!!,
+            primitive.get(
+                NamespacedKey("potion", "ambient"),
+                PersistentDataType.BOOLEAN,
+            )!!,
+            primitive.get(
+                NamespacedKey("potion", "particles"),
+                PersistentDataType.BOOLEAN,
+            )!!,
+            primitive.get(
+                NamespacedKey("potion", "icon"),
+                PersistentDataType.BOOLEAN,
+            )!!,
+            hiddenEffect
+        )
     }
 }
 

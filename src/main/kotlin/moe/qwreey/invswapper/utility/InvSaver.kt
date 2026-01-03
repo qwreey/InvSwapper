@@ -17,9 +17,7 @@ class InvSaver(
 // TODO: 아직 이팩트와 통계, 조합법, 도전과제 싱크가 수행되지 않습니다
 //       추후 구현될 예정입니다
 //        player.compassTarget
-//        player.clearActivePotionEffects()
 //        player.clearTitle()
-//        player.activePotionEffects
 //        <del>player.setStatistic</del>
 //        player.discoveredRecipes
 //        Bukkit.recipeIterator()
@@ -27,8 +25,34 @@ class InvSaver(
 //        player.getAdvancementProgress()
 //        + 어트리뷰트
 
+    fun saveEffects(player: Player, invKey: String) {
+        val slot = configReader.getSlotBySlotName(invKey) ?: return
+        if (!slot.savePotion) return
+
+        val list = player.activePotionEffects.toList().toMutableList()
+        setPersistent(
+            player,
+            "invsave-${invKey}-potion",
+            ListSerializer(PotionEffectSerializer),
+            list
+        )
+    }
+    fun loadEffects(player: Player, invKey: String) {
+        val slot = configReader.getSlotBySlotName(invKey) ?: return
+        if (!slot.savePotion) return
+
+        player.clearActivePotionEffects()
+        val list = getPersistent(
+            player,
+            "invsave-${invKey}-potion",
+            ListSerializer(PotionEffectSerializer)
+        ) ?: return
+        player.addPotionEffects(list)
+    }
+
     fun saveProps(player: Player, invKey: String) {
         val slot = configReader.getSlotBySlotName(invKey) ?: return
+
         setPersistent(
             player,
             "invsave-${invKey}-health",
@@ -43,31 +67,31 @@ class InvSaver(
         )
         setPersistent(
             player,
-            "invsave-${invKey}-foodLevel",
+            "invsave-${invKey}-food-level",
             PersistentDataType.INTEGER,
             player.foodLevel
         )
         setPersistent(
             player,
-            "invsave-${invKey}-fireTicks",
+            "invsave-${invKey}-fire-ticks",
             PersistentDataType.INTEGER,
             player.fireTicks
         )
         setPersistent(
             player,
-            "invsave-${invKey}-freezeTicks",
+            "invsave-${invKey}-freeze-ticks",
             PersistentDataType.INTEGER,
             player.freezeTicks
         )
         setPersistent(
             player,
-            "invsave-${invKey}-deathScreenScore",
+            "invsave-${invKey}-death-screen-score",
             PersistentDataType.INTEGER,
             player.deathScreenScore
         )
         setPersistent(
             player,
-            "invsave-${invKey}-totalExperience",
+            "invsave-${invKey}-total-experience",
             PersistentDataType.INTEGER,
             player.totalExperience
         )
@@ -115,7 +139,7 @@ class InvSaver(
                 player.gameMode.value
             )
         } else {
-            removePersistent(player, "invsave-${invKey}-gameMode")
+            removePersistent(player, "invsave-${invKey}-game-mode")
         }
     }
     fun loadProps(player: Player, invKey: String) {
@@ -134,31 +158,31 @@ class InvSaver(
         )
         player.foodLevel = getPersistent(
             player,
-            "invsave-${invKey}-foodLevel",
+            "invsave-${invKey}-food-level",
             PersistentDataType.INTEGER,
             { 20 }
         )
         player.fireTicks = getPersistent(
             player,
-            "invsave-${invKey}-fireTicks",
+            "invsave-${invKey}-fire-ticks",
             PersistentDataType.INTEGER,
             { 0 }
         )
         player.freezeTicks = getPersistent(
             player,
-            "invsave-${invKey}-freezeTicks",
+            "invsave-${invKey}-freeze-ticks",
             PersistentDataType.INTEGER,
             { 0 }
         )
         player.deathScreenScore = getPersistent(
             player,
-            "invsave-${invKey}-deathScreenScore",
+            "invsave-${invKey}-death-screen-score",
             PersistentDataType.INTEGER,
             { 0 }
         )
         player.totalExperience = getPersistent(
             player,
-            "invsave-${invKey}-totalExperience",
+            "invsave-${invKey}-total-experience",
             PersistentDataType.INTEGER,
             { 0 }
         )
@@ -189,7 +213,7 @@ class InvSaver(
         })
         player.gameMode = getPersistent(
             player,
-            "invsave-${invKey}-gameMode",
+            "invsave-${invKey}-game-mode",
             PersistentDataType.INTEGER,
         )?.run { GameMode.getByValue(this) } ?: GameMode.valueOf(slot.defaultGamemode.uppercase())
     }
@@ -246,7 +270,7 @@ class InvSaver(
             )
             setPersistent(
                 player,
-                "invsave-${invKey}-enderChest",
+                "invsave-${invKey}-ender-chest",
                 ItemStackListSerializer,
                 enderChestList
             )
@@ -271,10 +295,10 @@ class InvSaver(
         if (slot.saveEnderChest) {
             val loadedEnderChest = getPersistent(
                 player,
-                "invsave-${invKey}-enderChest",
+                "invsave-${invKey}-ender-chest",
                 ItemStackListSerializer,
                 { MutableList(
-                    player.inventory.contents.size,
+                    player.enderChest.contents.size,
                     { null }
                 ) }
             )

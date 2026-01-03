@@ -12,6 +12,7 @@ class Slot(
     val saveGamemode: Boolean,
     val saveInventory: Boolean,
     val saveEnderChest: Boolean,
+    val savePotion: Boolean,
 )
 
 class TeleportCommand(
@@ -46,6 +47,7 @@ class ConfigReader {
                     saveGamemode = slot.getBoolean("save-gamemode", true),
                     saveInventory = slot.getBoolean("save-inventory", true),
                     saveEnderChest = slot.getBoolean("save-enderchest", true),
+                    savePotion = slot.getBoolean("save-potion", true),
                 ))
             }
         }
