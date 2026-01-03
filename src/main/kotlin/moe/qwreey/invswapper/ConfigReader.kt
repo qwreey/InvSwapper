@@ -13,6 +13,7 @@ class Slot(
     val saveInventory: Boolean,
     val saveEnderChest: Boolean,
     val savePotion: Boolean,
+    val saveRecipes: Boolean,
 )
 
 class TeleportCommand(
@@ -48,6 +49,7 @@ class ConfigReader {
                     saveInventory = slot.getBoolean("save-inventory", true),
                     saveEnderChest = slot.getBoolean("save-enderchest", true),
                     savePotion = slot.getBoolean("save-potion", true),
+                    saveRecipes = slot.getBoolean("save-recipes", true),
                 ))
             }
         }

@@ -5,6 +5,8 @@ import moe.qwreey.invswapper.Invswapper
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Location
+import org.bukkit.NamespacedKey
+import org.bukkit.Particle
 import org.bukkit.attribute.Attribute
 import org.bukkit.event.Listener
 import org.bukkit.entity.Player
@@ -24,6 +26,49 @@ class InvSaver(
 //        Bukkit.advancementIterator()
 //        player.getAdvancementProgress()
 //        + 어트리뷰트
+
+    fun saveRecipes(player: Player, invKey: String) {
+        val slot = configReader.getSlotBySlotName(invKey) ?: return
+        if (!slot.saveRecipes) return
+
+        val list = player.discoveredRecipes.toList().map { it.asString() }.toMutableList()
+        setPersistent(
+            player,
+            "invsave-${invKey}-recipes",
+            ListSerializer(PersistentDataType.STRING),
+            list
+        )
+    }
+    fun loadRecipes(player: Player, invKey: String) {
+        val slot = configReader.getSlotBySlotName(invKey) ?: return
+        if (!slot.saveRecipes) return
+
+        val list = getPersistent(
+            player,
+            "invsave-${invKey}-recipes",
+            ListSerializer(PersistentDataType.STRING),
+            { emptyList<String>().toMutableList() },
+        )
+        val savedSet = list.toHashSet()
+        val currentSet = player.discoveredRecipes.map { it.asString() }.toHashSet()
+
+        val shouldDiscover = buildList<NamespacedKey> {
+            for (savedRecipe in savedSet) {
+                if (!currentSet.contains(savedRecipe)) {
+                    add(NamespacedKey.fromString(savedRecipe)!!)
+                }
+            }
+        }
+        val shouldUndiscover = buildList<NamespacedKey> {
+            for (currentRecipe in currentSet) {
+                if (!savedSet.contains(currentRecipe)) {
+                    add(NamespacedKey.fromString(currentRecipe)!!)
+                }
+            }
+        }
+        player.undiscoverRecipes(shouldUndiscover)
+        player.discoverRecipes(shouldDiscover)
+    }
 
     fun saveEffects(player: Player, invKey: String) {
         val slot = configReader.getSlotBySlotName(invKey) ?: return
@@ -53,6 +98,12 @@ class InvSaver(
     fun saveProps(player: Player, invKey: String) {
         val slot = configReader.getSlotBySlotName(invKey) ?: return
 
+        setPersistent(
+            player,
+            "invsave-${invKey}-sneaking",
+            PersistentDataType.BOOLEAN,
+            player.isSneaking
+        )
         setPersistent(
             player,
             "invsave-${invKey}-health",
@@ -134,16 +185,28 @@ class InvSaver(
         if (slot.saveGamemode) {
             setPersistent(
                 player,
-                "invsave-${invKey}-gameMode",
-                PersistentDataType.INTEGER,
-                player.gameMode.value
+                "invsave-${invKey}-gamemode",
+                PersistentDataType.STRING,
+                player.gameMode.name
             )
         } else {
-            removePersistent(player, "invsave-${invKey}-game-mode")
+            removePersistent(player, "invsave-${invKey}-gamemode")
         }
+        setPersistent(
+            player,
+            "invsave-${invKey}-flying",
+            PersistentDataType.BOOLEAN,
+            player.isFlying
+        )
     }
     fun loadProps(player: Player, invKey: String) {
         val slot = configReader.getSlotBySlotName(invKey) ?: return
+        player.isSneaking = getPersistent(
+            player,
+            "invsave-${invKey}-sneaking",
+            PersistentDataType.BOOLEAN,
+            { false }
+        )
         player.health = getPersistent(
             player,
             "invsave-${invKey}-health",
@@ -213,9 +276,15 @@ class InvSaver(
         })
         player.gameMode = getPersistent(
             player,
-            "invsave-${invKey}-game-mode",
-            PersistentDataType.INTEGER,
-        )?.run { GameMode.getByValue(this) } ?: GameMode.valueOf(slot.defaultGamemode.uppercase())
+            "invsave-${invKey}-gamemode",
+            PersistentDataType.STRING,
+        )?.run { GameMode.valueOf(this) } ?: GameMode.valueOf(slot.defaultGamemode.uppercase())
+        player.isFlying = getPersistent(
+            player,
+            "invsave-${invKey}-flying",
+            PersistentDataType.BOOLEAN,
+            { false }
+        )
     }
 
     fun savePos(player: Player, invKey: String, pos: Location) {

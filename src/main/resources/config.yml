@@ -12,6 +12,7 @@ slots:
     save-enderchest: true
     save-inventory: true
     save-potion: true
+    save-recipes: true
   creative:
     default-gamemode: creative
     worlds:
@@ -23,6 +24,7 @@ slots:
     save-enderchest: true
     save-inventory: true
     save-potion: true
+    save-recipes: true
 
 teleport-commands:
   main:

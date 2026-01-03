@@ -23,6 +23,7 @@ class PlayerTeleportEventListener(
             saver.savePos(event.player, slotFrom.name, event.from)
             saver.saveProps(event.player, slotFrom.name)
             saver.saveEffects(event.player, slotFrom.name)
+            saver.saveRecipes(event.player, slotFrom.name)
         }
         if (slotTo != null) {
             saver.loadInv(event.player, slotTo.name)
@@ -31,6 +32,7 @@ class PlayerTeleportEventListener(
                 event.to = loadedPos
             saver.loadProps(event.player, slotTo.name)
             saver.loadEffects(event.player, slotTo.name)
+            saver.loadRecipes(event.player, slotTo.name)
         }
     }
 }
