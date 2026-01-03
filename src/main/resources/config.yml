@@ -9,6 +9,8 @@ slots:
     default-world: world
     save-position: true
     save-gamemode: true
+    save-enderchest: true
+    save-inventory: true
   creative:
     default-gamemode: creative
     worlds:
@@ -17,3 +19,11 @@ slots:
     default-world: world_flatworld_flatworld
     save-position: true
     save-gamemode: true
+    save-enderchest: true
+    save-inventory: true
+
+teleport-commands:
+  main:
+    world: world
+  flat:
+    world: world_flatworld_flatworld

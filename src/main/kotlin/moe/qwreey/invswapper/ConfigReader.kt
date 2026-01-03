@@ -10,12 +10,29 @@ class Slot(
     val defaultWorld: String,
     val savePosition: Boolean,
     val saveGamemode: Boolean,
+    val saveInventory: Boolean,
+    val saveEnderChest: Boolean,
+)
+
+class TeleportCommand(
+    val name: String,
+    val world: String,
 )
 
 class ConfigReader {
     var slots: List<Slot>? = null
+    var teleportCommands: List<TeleportCommand>? = null
 
     fun reload(config: FileConfiguration) {
+        teleportCommands = buildList {
+            for (key in config.getConfigurationSection("teleport-commands")!!.getKeys(false)) {
+                val teleportCommand = config.getConfigurationSection("teleport-commands.${key}")!!
+                add(TeleportCommand(
+                    name = key,
+                    world = teleportCommand.getString("world", "world")!!,
+                ))
+            }
+        }
         slots = buildList {
             for (key in config.getConfigurationSection("slots")!!.getKeys(false)) {
                 val slot = config.getConfigurationSection("slots.${key}")!!
@@ -27,17 +44,22 @@ class ConfigReader {
                     defaultWorld = slot.getString("default-world")!!,
                     savePosition = slot.getBoolean("save-position", true),
                     saveGamemode = slot.getBoolean("save-gamemode", true),
+                    saveInventory = slot.getBoolean("save-inventory", true),
+                    saveEnderChest = slot.getBoolean("save-enderchest", true),
                 ))
             }
         }
     }
     fun unload() {
         slots = null
+        teleportCommands = null
     }
-    fun getSlotByWorldName(worldName: String): Slot? {
+    fun getSlotByWorldName(worldName: String?): Slot? {
+        if (worldName == null) return null
         return slots?.find { it.worlds.contains(worldName) }
     }
-    fun getSlotBySlotName(slotName: String): Slot? {
+    fun getSlotBySlotName(slotName: String?): Slot? {
+        if (slotName == null) return null
         return slots?.find { it.name == slotName }
     }
 }

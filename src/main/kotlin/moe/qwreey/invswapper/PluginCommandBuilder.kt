@@ -5,6 +5,8 @@ import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.tree.LiteralCommandNode
 import io.papermc.paper.command.brigadier.CommandSourceStack
 import io.papermc.paper.command.brigadier.Commands
+import org.bukkit.Bukkit
+import org.bukkit.permissions.Permission
 
 class PluginCommandBuilder(
     plugin: Invswapper
@@ -24,10 +26,12 @@ class PluginCommandBuilder(
         return (Commands.literal("invswapper")
             .then(
                 Commands.literal("reload")
+                    .requires{ it.getSender().hasPermission("plugin.permission") }
                     .executes(::reload)
             )
             .then(
                 Commands.literal("reset-settings")
+                    .requires{ it.getSender().hasPermission("plugin.permission") }
                     .executes(::resetSettings)
             )
         ).build()

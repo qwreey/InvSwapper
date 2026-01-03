@@ -1,19 +1,14 @@
 package moe.qwreey.invswapper.utility
 
 import de.tr7zw.nbtapi.NBT
-import de.tr7zw.nbtapi.plugin.NBTAPI
 import moe.qwreey.invswapper.Invswapper
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Location
-import org.bukkit.advancement.Advancement
 import org.bukkit.attribute.Attribute
 import org.bukkit.event.Listener
 import org.bukkit.entity.Player
 import org.bukkit.persistence.PersistentDataType
-import java.util.Locale
-import java.util.Optional
-import kotlin.math.round
 
 class InvSaver(
     plugin: Invswapper
@@ -25,12 +20,12 @@ class InvSaver(
 //        player.clearActivePotionEffects()
 //        player.clearTitle()
 //        player.activePotionEffects
-//        player.setStatistic
+//        <del>player.setStatistic</del>
 //        player.discoveredRecipes
-//        player.stati
 //        Bukkit.recipeIterator()
 //        Bukkit.advancementIterator()
 //        player.getAdvancementProgress()
+//        + 어트리뷰트
 
     fun saveProps(player: Player, invKey: String) {
         val slot = configReader.getSlotBySlotName(invKey) ?: return
@@ -210,6 +205,8 @@ class InvSaver(
         )
     }
     fun loadPos(player: Player, invKey: String): Location? {
+        val slot = configReader.getSlotBySlotName(invKey) ?: return null
+        if (!slot.savePosition) return null
         val key = "invsave-${invKey}-location"
         return if (hasPersistent(player, key)) {
             getPersistent(
@@ -226,32 +223,63 @@ class InvSaver(
     }
 
     fun saveInv(player: Player, invKey: String) {
-        PersistentDataType.TAG_CONTAINER
-        val contents = player.inventory.contents
-        val list = MutableList(
-            contents.size,
-            { index -> contents[index] }
-        )
-        setPersistent(
-            player,
-            "invsave-${invKey}",
-            ItemStackListSerializer,
-            list
-        )
+        val slot = configReader.getSlotBySlotName(invKey) ?: return
+
+        if (slot.saveInventory) {
+            val contents = player.inventory.contents
+            val list = MutableList(
+                contents.size,
+                { index -> contents[index] }
+            )
+            setPersistent(
+                player,
+                "invsave-${invKey}",
+                ItemStackListSerializer,
+                list
+            )
+        }
+        if (slot.saveEnderChest) {
+            val enderChestContents = player.enderChest.contents
+            val enderChestList = MutableList(
+                enderChestContents.size,
+                { index -> enderChestContents[index] }
+            )
+            setPersistent(
+                player,
+                "invsave-${invKey}-enderChest",
+                ItemStackListSerializer,
+                enderChestList
+            )
+        }
         logger.info("Saved ${player.name}'s inventory to slot ${invKey}")
     }
     fun loadInv(player: Player, invKey: String) {
-        val loaded = getPersistent(
-            player,
-            "invsave-${invKey}",
-            ItemStackListSerializer,
-            { MutableList(
-                player.inventory.contents.size,
-                { null }
-            ) }
-        )
-        player.inventory.contents = loaded.toTypedArray()
+        val slot = configReader.getSlotBySlotName(invKey) ?: return
 
+        if (slot.saveInventory) {
+            val loaded = getPersistent(
+                player,
+                "invsave-${invKey}",
+                ItemStackListSerializer,
+                { MutableList(
+                    player.inventory.contents.size,
+                    { null }
+                ) }
+            )
+            player.inventory.contents = loaded.toTypedArray()
+        }
+        if (slot.saveEnderChest) {
+            val loadedEnderChest = getPersistent(
+                player,
+                "invsave-${invKey}-enderChest",
+                ItemStackListSerializer,
+                { MutableList(
+                    player.inventory.contents.size,
+                    { null }
+                ) }
+            )
+            player.enderChest.contents = loadedEnderChest.toTypedArray()
+        }
         logger.info("Loaded ${player.name}'s inventory from slot ${invKey}")
     }
 }
